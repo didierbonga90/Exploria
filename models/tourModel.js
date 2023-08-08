@@ -1,12 +1,16 @@
 const mongoose = require('mongoose')
 const slugify = require('slugify')
+const validator = require('validator')
 
 const tourSchema = new mongoose.Schema({
     // Schema definition
     name: {
         type: String,
         required: [true, 'Name is a required field'],
-        trim: true
+        trim: true,
+        maxlength: [40, 'A tour must have a maximum of 40 characters'],
+        minlength: [5, 'A tour must have at least 5 characters'],
+        // validate: [validator.isAlpha, 'Tour name must only contain alpha characters']
     },
     slug: String,
     duration: {
@@ -19,11 +23,18 @@ const tourSchema = new mongoose.Schema({
     },
     affluence :{
         type: String,
-        required: [true, 'Affluence is a required field']
+        required: [true, 'Affluence is a required field'],
+        // enum : to specify what kind of affluence is allowed
+        enum: {
+            values:['low', 'medium', 'high'],
+            message: 'Affluence is either low, medium or high'
+        }
     },
     ratingsAverage: {
         type: Number,
-        default: 4.5
+        default: 4.5,
+        min: [1, 'Rating must be above 1.0'],
+        max: [1, 'Rating must be below 5.0'],
     },
     ratingsQuantity: {
         type: Number,
@@ -33,8 +44,15 @@ const tourSchema = new mongoose.Schema({
         type: Number,
         required: [true, 'Price is a required field']
     },
-    priceDiscount: { Number
-        
+    priceDiscount: { 
+        type: Number,
+        // custom validator
+        validate: {
+            validator: function (val){
+                return val < this.price // return the discount price if it is < price
+            },
+        message: 'Discount Price ({VALUE}) must be below the regular price' // ({VALUE}) -> to have access to the actual value
+        }
     },
     summary:{
         type: String,
@@ -104,6 +122,8 @@ tourSchema.pre('aggregate', function(next){
     this.pipeline().unshift({ $match :{ secretTour: {$ne: true}}})
     next()
 })
+
+// 
 
 const Tour = mongoose.model('Tour', tourSchema);
 module.exports = Tour
