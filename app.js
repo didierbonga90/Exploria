@@ -25,7 +25,7 @@ if(process.env.NODE_ENV === 'development'){
 }
 console.log(process.env.NODE_ENV)
 
-// Set security HTTP headers (Helmet)
+// Set security HTTP headers with Helmet
 app.use(helmet())
 
 // Limit requests from same API
