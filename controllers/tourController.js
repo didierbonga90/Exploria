@@ -1,11 +1,11 @@
-const Tour = require('../models/tourModel')
-const APIFreatures = require('../utils/apiFeatures')
-const catchAsync = require('../utils/catchAsync')  
-const AppError = require('../utils/appError') 
+const Tour = require('./../models/tourModel')
+const APIFeatures = require('./../utils/apiFeatures')
+const catchAsync = require('./../utils/catchAsync')  
+const AppError = require('./../utils/appError') 
 
 // HANDLER FUNCTIONS
 
-exports.aliasTopTours = async (req,res,next) => {
+exports.aliasTopTours = (req,res,next) => {
     req.query.limit = '5'
     req.query.sort = '-ratingsAverage,price'
     req.query.fields = 'name,price,ratingsAverage,summary,affluence'
@@ -16,12 +16,12 @@ exports.aliasTopTours = async (req,res,next) => {
 // GET all tours
 exports.getAllTours = catchAsync(async (req, res,next) => {
     // Execute the query
-    const features = new APIFreatures(Tour.find(), req.query)
+    const features = new APIFeatures(Tour.find(), req.query)
     .filter()
     .sort()
-    .limitedFields()
+    .limitFields()
     .paginate()
-    const tours = await features.query
+    const tours = await features.query;
 
     // Send response
     res.status(200).json({

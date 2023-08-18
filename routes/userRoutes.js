@@ -9,12 +9,18 @@ router.post('/signup', authController.signup)
 // Login
 router.post('/login', authController.login)
 
-
-
 // Reset password
 router.post('/forgotPassword', authController.forgotPassword)
 router.patch('/resetPassword/:token', authController.resetPassword)
 
+// Update current password for the logged in user
+router.patch('/updatePassword', authController.protect, authController.updatePassword)
+
+// Update user
+router.patch('/updateMe', authController.protect, userController.updateMe)
+
+// Delete user (make him inactive from DB)
+router.delete('/deleteMe', authController.protect, userController.deleteMe)
 
 
 router

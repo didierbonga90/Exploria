@@ -42,7 +42,12 @@ const userSchema = new mongoose.Schema({
     },
     passwordChangedAt: Date,
     passwordResetToken: String,
-    passwordResetExpires: Date
+    passwordResetExpires: Date,
+    active:{ // active -> to specify if the user account is active or not active(deleted)
+        type:Boolean,
+        default: true,
+        select: false // to hide this active field 
+    }
 })
 
 userSchema.pre('save', async function(next) {
@@ -55,6 +60,23 @@ userSchema.pre('save', async function(next) {
 
     // Delete passwordConfirm field
     this.passwordConfirm = undefined
+    next()
+})
+
+userSchema.pre('save', function(next){ // this function (pre) runs right before a new document is actually saved
+    if(!this.isModified('password') || this.isNew){
+        return next()
+    }
+
+    this.passwordChangedAt = Date.now() - 1000 /* to put passwordChangedAt 1 second in the past to ensure that the token is created
+                                                  after the password has been changed              
+    */
+   next()
+})
+
+// This query middleware is for us to see the deleted user inside the database but not on Postman
+userSchema.pre(/^find/, function(next){ //   "/^" -> this expression looks for all strings that start with "find" 
+    this.find({active:{$ne : false}}) // show all user with active status not equal to false (Postman)
     next()
 })
 

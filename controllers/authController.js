@@ -1,9 +1,10 @@
 const { promisify } = require('util')
 const User = require('./../models/userModel')
 const catchAsync = require('./../utils/catchAsync')
-const jwt = require('jsonwebtoken')
 const AppError = require('./../utils/appError')
 const sendEmail = require('./../utils/email')
+const jwt = require('jsonwebtoken')
+const crypto = require('crypto') 
 
 // TOKEN FUNCTION
 const signToken = id =>{
@@ -14,25 +15,35 @@ const signToken = id =>{
     )
 }
 
-// SIGN UP
-exports.signup = catchAsync(async(req, res, next) => {
-    
-    const newUser = await User.create({
-        name: req.body.name,
-        email: req.body.email,
-        password: req.body.password,
-        passwordConfirm: req.body.passwordConfirm
-    })
+// Create the token
+const createAndSendToken = (user, statusCode, res) =>{
+    const token = signToken(user._id)
+    const cookieOptions = {
+        expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN *24 * 60 * 60 * 1000), // hours min sec milliseconds
+        // secure: true, // the cookie will be sent on an encrypted connection (https://)
+        httpOnly: true // the cookie cannot be accessed or modified by the browser (to prevent cross site attack)
+    }
+    if(process.env.NODE_ENV === 'production') cookieOptions.secure = true
 
-    // Create the token
-    const token = signToken(newUser._id)
-    res.status(201).json({
+    // remove the password from the output when we create user
+    user.password = undefined
+
+    // create a cookie
+    res.cookie('jwt', token, cookieOptions)
+    
+    res.status(statusCode).json({
         status: 'success',
         token, // after creating the token, we send it to the client
         data:{
-            user: newUser
+            user: user
         }
     })
+}
+
+// SIGN UP
+exports.signup = catchAsync(async(req, res, next) => {
+    const newUser = await User.create(req.body)
+    createAndSendToken(newUser, 201, res)
 })
 
 
@@ -54,11 +65,7 @@ exports.login = catchAsync(async (req, res, next) => {
     }
 
     // If everything's Ok, send token to client
-    const token = signToken(user._id)
-    res.status(200).json({
-        status: 'success',
-        token
-    })
+    createAndSendToken(user, 200, res)
 })
 
 // PROTECTED TOUR ROUTE FUNCTION
@@ -148,15 +155,48 @@ exports.forgotPassword = catchAsync(async (req, res, next) =>{
 
 
 // RESET PASSWORD (setting the new password)
-exports.resetPassword = async (req, res, next) =>{
+exports.resetPassword = catchAsync(async (req, res, next) =>{
     // Get the user based on the token
+    const hashedToken = crypto
+    .createHash('sha256')
+    .update(req.params.token)
+    .digest('hex')
 
+    const user = await User.findOne({passwordResetToken: hashedToken, passwordResetExpires: {$gt: Date.now()}}) 
 
     // If token has not expired AND there is a user, set the new password
-
+    if(!user){
+        return next( new AppError('Token is invalid or has expired!', 400))
+    }
+    user.password = req.body.password // Set the new password
+    user.passwordConfirm = req.body.passwordConfirm
+    user.passwordResetToken = undefined
+    user.passwordResetExpires = undefined
+    await user.save()
 
     // Update changePasswordAt property for the user
-
-
     // Log the user in, send JWT
-}
+    createAndSendToken(user, 200, res)
+})
+
+
+// UPDATE THE CURRENT PASSWORD
+exports.updatePassword = catchAsync(async(req, res, next) =>{
+    // Get the user from the database
+    const user = await User.findById(req.user.id).select('+password')
+    
+    // Check if the POSTed password is correct
+    if(!(await user.correctPassword(req.body.passwordCurrent, user.password))){
+        return next(new AppError('The current password is incorrect!', 401))
+    }
+
+    // If correct, update password
+    user.password = req.body.password
+    user.passwordConfirm = req.body.passwordConfirm
+    await user.save()
+
+    // Log user in, send JWT
+    createAndSendToken(user, 200, res)
+})
+
+
