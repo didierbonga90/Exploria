@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const slugify = require('slugify')
 const validator = require('validator')
+// const User = require('./userModel')
 
 const tourSchema = new mongoose.Schema({
     // Schema definition
@@ -34,7 +35,7 @@ const tourSchema = new mongoose.Schema({
         type: Number,
         default: 4.5,
         min: [1, 'Rating must be above 1.0'],
-        max: [1, 'Rating must be below 5.0'],
+        max: [5, 'Rating must be below 5.0'],
     },
     ratingsQuantity: {
         type: Number,
@@ -78,7 +79,39 @@ const tourSchema = new mongoose.Schema({
     secretTour:{
         type: Boolean,
         default: false
-    }
+    },
+    startLocation:
+    {
+        // GeoJSON
+        type:{
+            type: String,
+            default: 'Point', // can be polygons,lines or other mongoDB geometry types 
+            enum: ['Point']
+        },
+        coordinates: [Number], // we expect an array of numbers
+        address: String,
+        description: String
+    },
+    locations:[
+        {
+            type:{
+                type: String,
+                default: 'Point', 
+                enum: ['Point']
+            },
+            coordinates: [Number],
+            address: String,
+            description: String,
+            day: Number
+        }
+    ],
+    // guides: Array -> for embeeding implementation of guides
+    guides: [
+        {
+            type:mongoose.Schema.ObjectId,
+            ref: 'User'
+        }
+    ]
 }, 
 {
     // Schema options
@@ -91,12 +124,26 @@ tourSchema.virtual('durationWeeks').get(function () {
     return this.duration / 7;
 });
 
-// // Document Middleware : runs before .save() .create()
-// // pre save middleware (or pre save hooks)
-// tourSchema.pre('save', function (next) {
-//     this.slug = slugify(this.name), {lower:true};
+// DOCUMENT MIDDLEWARE : runs before .save() .create()
+// pre save middleware (or pre save hooks)
+tourSchema.pre('save', function (next) {
+    this.slug = slugify(this.name), {lower:true};
+    next()
+});
+
+// /* IMPLEMENT EMBBEDING FOR NEW TOUR : 
+// Allows us to implement the ID of any guide in an array and 
+// return the full information of each guide with the corresponding ID
+// that we implemented.
+// This works just for creating document
+// */ 
+// tourSchema.pre('save',async function (next) {
+//     const guidesPromises = this.guides.map(async id => await User.findById(id))
+//     this.guides = await Promise.all(guidesPromises)
 //     next()
-// });
+// })
+
+
 
 // tourSchema.post('save', function (doc,next) {
 //     console.log(doc);
@@ -104,7 +151,7 @@ tourSchema.virtual('durationWeeks').get(function () {
 // })
 
 // Query Middleware
-tourSchema.pre('/^find/', function (next){ // /^find/ -> every search starts with find ( find, findById, findOne, findOneAndUpdate ...)
+tourSchema.pre(/^find/, function (next){ // /^find/ -> every search starts with find ( find, findById, findOne, findOneAndUpdate ...)
     this.find({ secretTour: {$ne: true} })
 
     // To mesure how long it takes to execute the current query
@@ -112,10 +159,14 @@ tourSchema.pre('/^find/', function (next){ // /^find/ -> every search starts wit
     next()
 });
 
-tourSchema.post('/^find/', function (docs,next){
-    console.log(`Query took ${Date.now() - this.start} milliseconds`);
+
+tourSchema.pre(/^find/, function (next){
+    this.populate({
+        path:'guides',
+        select: '-__v -passwordChangedAt'
+    })
     next()
-});
+})
 
 // Aggregation Middleware
 tourSchema.pre('aggregate', function(next){
@@ -123,7 +174,11 @@ tourSchema.pre('aggregate', function(next){
     next()
 })
 
-// 
+tourSchema.post(/^find/, function (docs,next){
+    console.log(`Query took ${Date.now() - this.start} milliseconds`);
+    next()
+});
+
 
 const Tour = mongoose.model('Tour', tourSchema);
 module.exports = Tour
