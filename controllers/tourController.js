@@ -35,7 +35,7 @@ exports.getAllTours = catchAsync(async (req, res,next) => {
 
 // GET single tour
 exports.getTour = catchAsync(async(req, res,next) => {
-    const tour =  await Tour.findById(req.params.id)
+    const tour =  await Tour.findById(req.params.id).populate('reviews')
     //                 Tour.findOne(_id: req.params.id)
         /* console.log(req.params); // req.params -> /:id
     // multiply a string that looks like a number ( '5' , '4') by a real number, 

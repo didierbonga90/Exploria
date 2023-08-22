@@ -114,7 +114,8 @@ const tourSchema = new mongoose.Schema({
     ]
 }, 
 {
-    // Schema options
+    /* Schema options -> to make sure that when we have a virtual property ( a field that
+        is not stored in the DB) , we want this to also show up whenever there is an output */
     toJSON:{virtuals: true},
     toObject:{virtuals: true}
 });
@@ -123,6 +124,13 @@ const tourSchema = new mongoose.Schema({
 tourSchema.virtual('durationWeeks').get(function () {
     return this.duration / 7;
 });
+
+// Virtual populate
+tourSchema.virtual('reviews', {
+    ref: 'Review',
+    foreignField: 'tour',
+    localField: '_id'
+})
 
 // DOCUMENT MIDDLEWARE : runs before .save() .create()
 // pre save middleware (or pre save hooks)

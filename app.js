@@ -17,7 +17,8 @@ const globalErrorHandler = require('./controllers/errorController')
 
 // Mount our routers
 const tourRouter = require('./routes/tourRoutes')
-const userRouter = require('./routes/userRoutes');
+const userRouter = require('./routes/userRoutes')
+const reviewRouter = require('./routes/reviewRoutes')
 
 // GLOBAL MIDDLEWARES -> use function to use middleware
 if(process.env.NODE_ENV === 'development'){
@@ -70,6 +71,7 @@ app.use((req, res, next) => {
 // ROUTES
 app.use('/api/v1/tours', tourRouter)
 app.use('/api/v1/users', userRouter)
+app.use('/api/v1/reviews', reviewRouter)
 
 
 // Global Handling Errors 
