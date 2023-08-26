@@ -1,6 +1,7 @@
 const User = require('../models/userModel')
 const catchAsync = require('../utils/catchAsync')  
 const AppError = require('../utils/appError')
+const factory = require('./handlerFactory')
 
 // filterObj -> to filter the whole body (req.body) and extract just the elements we need
 const filterObj = (obj, ...allowedFields) =>{
@@ -78,16 +79,7 @@ exports.createUser = (req, res) =>{
     })
 }
 
-exports.updateUser = (req, res) =>{
-    res.status(500).json({
-        status: 'error',
-        message: 'This route is not defined!'
-    })
-}
+// DO NOT update password with this 
+exports.updateUser = factory.updateOne(User)
 
-exports.deleteUser = (req, res) =>{
-    res.status(500).json({
-        status: 'error',
-        message: 'This route is not defined!'
-    })
-}
+exports.deleteUser = factory.deleteOne(User)
