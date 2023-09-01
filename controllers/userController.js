@@ -79,7 +79,7 @@ exports.createUser = (req, res) =>{
     })
 }
 
-// DO NOT update password with this 
+// DO NOT update password with this (This update is only for ADMIN)
 exports.updateUser = factory.updateOne(User)
 
 exports.deleteUser = factory.deleteOne(User)
