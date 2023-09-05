@@ -1,7 +1,6 @@
 const Tour = require('./../models/tourModel')
-const APIFeatures = require('./../utils/apiFeatures')
 const catchAsync = require('./../utils/catchAsync')  
-const AppError = require('./../utils/appError') 
+// const AppError = require('./../utils/appError') 
 const factory = require('./handlerFactory')
 
 // HANDLER FUNCTIONS
@@ -15,49 +14,9 @@ exports.aliasTopTours = (req,res,next) => {
 
 
 // GET all tours
-exports.getAllTours = catchAsync(async (req, res,next) => {
-    // Execute the query
-    const features = new APIFeatures(Tour.find(), req.query)
-    .filter()
-    .sort()
-    .limitFields()
-    .paginate()
-    const tours = await features.query;
+exports.getAllTours = factory.getAll(Tour)
 
-    // Send response
-    res.status(200).json({
-        status: 'success',
-        results: tours.length,
-        data:{
-            tours
-        }
-    })
-})
-
-// GET single tour
-exports.getTour = catchAsync(async(req, res,next) => {
-    const tour =  await Tour.findById(req.params.id).populate('reviews')
-    //                 Tour.findOne(_id: req.params.id)
-        /* console.log(req.params); // req.params -> /:id
-    // multiply a string that looks like a number ( '5' , '4') by a real number, 
-    // it automatically converts the string to a number
-     const id = req.params.id * 1 
-    */
-
-    if(!tour) {
-        return next(new AppError('No tour found with that ID', 404))
-    }
-        
-    res.status(200).json({
-        status: 'success',
-        data:{
-            tour
-        }
-     })
-})
-
-
-// CREATE tour
+exports.getTour = factory.getOne(Tour, {path: 'reviews'})
 exports.createTour = factory.createOne(Tour)
 exports.updateTour = factory.updateOne(Tour)
 exports.deleteTour = factory.deleteOne(Tour)
