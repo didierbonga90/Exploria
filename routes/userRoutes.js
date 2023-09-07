@@ -9,22 +9,28 @@ router.post('/signup', authController.signup)
 // Login
 router.post('/login', authController.login)
 
+
 // Reset password
 router.post('/forgotPassword', authController.forgotPassword)
 router.patch('/resetPassword/:token', authController.resetPassword)
 
+// this middleware will protect all the routes after written after it
+router.use(authController.protect)
+
 // Update current password for the logged in user
-router.patch('/updatePassword', authController.protect, authController.updatePassword)
+router.patch('/updatePassword', authController.updatePassword)
 
 // Get user
-router.get('/me', authController.protect, userController.getMe, userController.getUser)
+router.get('/me', userController.getMe, userController.getUser)
 
 // Update user
-router.patch('/updateMe', authController.protect, userController.updateMe)
+router.patch('/updateMe', userController.updateMe)
 
 // Delete user (make him inactive from DB)
-router.delete('/deleteMe', authController.protect, userController.deleteMe)
+router.delete('/deleteMe', userController.deleteMe)
 
+// Only admin will have permission of those routes after this middleware
+router.use(authController.restrictTo('admin'))
 
 router
 .route('/')

@@ -7,17 +7,17 @@ const reviewRouter = require('./../routes/reviewRoutes')
 
 router.route('/top-5-cheap-tours').get(tourController.aliasTopTours, tourController.getAllTours)
 router.route('/tour-stats').get(tourController.getTourStats);
-router.route('/monthly-plan/:year').get(tourController.getMonthlyPlan);
+router.route('/monthly-plan/:year').get(authController.protect, authController.restrictTo('admin','lead-guide','guide'),tourController.getMonthlyPlan);
 
 router
 .route('/')
-.get(authController.protect, tourController.getAllTours) // auth.protect runs first and protects the tourControllers.getAllTours from unlogged in users
-.post(tourController.createTour)
+.get(tourController.getAllTours) 
+.post(authController.protect, authController.restrictTo('admin','lead-guide'),tourController.createTour)
 
 router
 .route('/:id')
 .get(tourController.getTour)
-.patch(tourController.updateTour)
+.patch(authController.protect,authController.restrictTo('admin', 'lead-guide'),tourController.updateTour)
 .delete(authController.protect, 
     authController.restrictTo('admin', 'lead-guide'), 
     tourController.deleteTour)

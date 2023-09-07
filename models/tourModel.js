@@ -125,6 +125,10 @@ tourSchema.virtual('durationWeeks').get(function () {
     return this.duration / 7;
 });
 
+// Use indexes for improving read performance
+tourSchema.index({price: 1, ratingsAverage: -1}) // 1 -> sorting prices in ASC order | -1 -> sorting prices in DESC order
+tourSchema.index({slug: 1})
+
 // Virtual populate
 tourSchema.virtual('reviews', {
     ref: 'Review',

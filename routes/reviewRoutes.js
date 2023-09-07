@@ -3,14 +3,16 @@ const router = express.Router({ mergeParams: true }) // merge params -> to merge
 const reviewController = require('./../controllers/reviewController')
 const authController = require('./../controllers/authController')
 
+// protect all reviews routes from unlogged in users
+router.use(authController.protect)
 
 router.route('/')
 .get(reviewController.getAllReviews)
-.post(authController.protect, authController.restrictTo('user'),reviewController.setTourAndUserIds,reviewController.createReview)
+.post(authController.restrictTo('user'),reviewController.setTourAndUserIds,reviewController.createReview)
 
 router.route('/:id')
 .get(reviewController.getReview)
-.delete(reviewController.deleteReview)
-.patch(reviewController.updateReview)
+.patch(authController.restrictTo('user', 'admin'),reviewController.updateReview)
+.delete(authController.restrictTo('user', 'admin'),reviewController.deleteReview)
 
 module.exports = router

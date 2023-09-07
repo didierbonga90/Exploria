@@ -30,7 +30,7 @@ exports.getTourStats = catchAsync(async(req, res,next) => {
         },
         { 
             $group: {
-                _id: '$affluence',
+                _id: {$toUpper:'$affluence'}, // grouping by affluence
                 numTours : {$sum: 1},
                 numRatings: {$sum :'$ratingsQuantity'},
                 avgRating: { $avg:'$ratingsAverage'},
@@ -38,6 +38,9 @@ exports.getTourStats = catchAsync(async(req, res,next) => {
                 minPrice: { $min:'$price'},
                 maxPrice: { $max:'$price'}
             }
+        },
+        {
+            $sort: { avgPrice: 1 }
         }
     ])
 

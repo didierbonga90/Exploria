@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const Tour = require('../models/tourModel')
 
 const reviewSchema = new mongoose.Schema({
     review:{
@@ -45,6 +46,36 @@ reviewSchema.pre(/^find/, function(next){
         select: 'name photo'
     })
     next()
+})
+
+// We ususally use instance method, let's use static method to calculate the real rating average
+reviewSchema.statics.calcAverageRatings = async function(tourId){
+    const stats = await this.aggregate([
+        {
+            $match: { // to select all the review of //*the specific tour (tourId)
+                tour: tourId
+            }
+        },
+        {
+            $group: { 
+                _id: '$tour', // we first specify the id
+                nRating: {$sum: 1}, // number of rating : we add 1 for each tour that was matched in the previous step
+                avgRating: {$avg: '$rating'} // now we calculate the rating average
+            }
+        }
+    ])
+    console.log(stats)
+
+    // Now we update the tour with its real value of rating average
+    await Tour.findByIdAndUpdate(tourId,{
+        ratingsQuantity: stats[0].nRating,
+        ratingsAverage: stats[0].avgRating
+    })
+}
+
+reviewSchema.post('save', function(){
+    // this points to current review
+    this.constructor.calcAverageRatings(this.tour)
 })
 
 const Review = mongoose.model('Review', reviewSchema)
