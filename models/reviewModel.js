@@ -32,15 +32,10 @@ const reviewSchema = new mongoose.Schema({
     toObject:{virtuals: true}
 })
 
+// Avoid duplicate review
+reviewSchema.index({tour: 1, user: 1}, {unique: true})
+
 reviewSchema.pre(/^find/, function(next){
-    // this.populate({
-    //     path: 'tour',
-    //     select: 'name'
-    // }).populate({
-    //     path: 'user',
-    //     select: 'name photo'
-    // })
-    // next()
     this.populate({
         path: 'user',
         select: 'name photo'
@@ -65,17 +60,35 @@ reviewSchema.statics.calcAverageRatings = async function(tourId){
         }
     ])
     console.log(stats)
-
-    // Now we update the tour with its real value of rating average
-    await Tour.findByIdAndUpdate(tourId,{
-        ratingsQuantity: stats[0].nRating,
-        ratingsAverage: stats[0].avgRating
-    })
+    
+    if(stats.length > 0){
+        // Now we update the tour with its real value of rating average
+        await Tour.findByIdAndUpdate(tourId,{
+            ratingsQuantity: stats[0].nRating,
+            ratingsAverage: stats[0].avgRating
+        })
+    }
+    else{
+        await Tour.findByIdAndUpdate(tourId,{
+            ratingsQuantity: 0,
+            ratingsAverage: 4.5
+        })
+    }
 }
 
 reviewSchema.post('save', function(){
     // this points to current review
     this.constructor.calcAverageRatings(this.tour)
+})
+
+reviewSchema.pre(/^findOneAnd/, async function(next){
+    this.r = await this.findOne().clone()
+    console.log(this.r)
+    next()
+})
+
+reviewSchema.post(/^findOneAnd/, async function(){
+    await this.r.constructor.calcAverageRatings(this.r.tour)
 })
 
 const Review = mongoose.model('Review', reviewSchema)

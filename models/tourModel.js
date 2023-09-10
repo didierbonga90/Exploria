@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const slugify = require('slugify')
 const validator = require('validator')
+const db = require('../db')
 // const User = require('./userModel')
 
 const tourSchema = new mongoose.Schema({
@@ -36,6 +37,7 @@ const tourSchema = new mongoose.Schema({
         default: 4.5,
         min: [1, 'Rating must be above 1.0'],
         max: [5, 'Rating must be below 5.0'],
+        set: val => Math.round(val * 10) / 10 // 2.666666 -> 2.7
     },
     ratingsQuantity: {
         type: Number,
@@ -90,7 +92,7 @@ const tourSchema = new mongoose.Schema({
         },
         coordinates: [Number], // we expect an array of numbers
         address: String,
-        description: String
+        description: String,
     },
     locations:[
         {
@@ -128,6 +130,7 @@ tourSchema.virtual('durationWeeks').get(function () {
 // Use indexes for improving read performance
 tourSchema.index({price: 1, ratingsAverage: -1}) // 1 -> sorting prices in ASC order | -1 -> sorting prices in DESC order
 tourSchema.index({slug: 1})
+tourSchema.index({startLocation: '2dsphere'}) // 2dsphere is an index for geospatial queries 
 
 // Virtual populate
 tourSchema.virtual('reviews', {
@@ -180,11 +183,12 @@ tourSchema.pre(/^find/, function (next){
     next()
 })
 
-// Aggregation Middleware
-tourSchema.pre('aggregate', function(next){
-    this.pipeline().unshift({ $match :{ secretTour: {$ne: true}}})
-    next()
-})
+// // Aggregation Middleware
+// tourSchema.pre('aggregate', function(next){
+//     this.pipeline().unshift({ $match :{ secretTour: {$ne: true}}})
+//     console.log(this.pipeline())
+//     next()
+// })
 
 tourSchema.post(/^find/, function (docs,next){
     console.log(`Query took ${Date.now() - this.start} milliseconds`);

@@ -9,6 +9,15 @@ router.route('/top-5-cheap-tours').get(tourController.aliasTopTours, tourControl
 router.route('/tour-stats').get(tourController.getTourStats);
 router.route('/monthly-plan/:year').get(authController.protect, authController.restrictTo('admin','lead-guide','guide'),tourController.getMonthlyPlan);
 
+
+// Geospatial routes
+router.route('/tours-within/:distance/center/:latlng/unit/:unit').get(tourController.getToursWithin)
+// tours-distance?distance=233&center=37,122&unit=mi (url not clean)
+// tours-distance/233/center/37,122/unit/mi  (url looks cleaner)
+
+// Geospatial aggregation  - calculating distances
+router.route('/distances/:latlng/unit/:unit').get(tourController.getDistances)
+
 router
 .route('/')
 .get(tourController.getAllTours) 
