@@ -18,7 +18,14 @@ exports.getTour = catchAsync(async(req, res) => {
     const tour = await Tour.findOne({slug: req.params.slug}).populate({ path: 'reviews', fields: 'review rating user'})
 
     res.status(200).render('tour', {
-        title:'Tour',
+        title:`${tour.name} tour`,
         tour
+    })
+})
+
+
+exports.getLoginForm = catchAsync(async(req, res, next) => {
+    res.status(200).render('login', {
+        title:'Log into your account'
     })
 })

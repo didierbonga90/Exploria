@@ -8,6 +8,7 @@ const helmet = require('helmet')
 const mongoSanitize = require('express-mongo-sanitize')
 const xss = require('xss-clean')
 const hpp = require('hpp')
+const cookieParser = require('cookie-parser')
 
 // DB Connectivity
 connectDB()
@@ -39,7 +40,14 @@ if(process.env.NODE_ENV === 'development'){
 console.log(process.env.NODE_ENV)
 
 // Set security HTTP headers with Helmet
-app.use(helmet())
+app.use(helmet({
+    contentSecurityPolicy: {
+        useDefaults: true, 
+        directives: { 
+        'script-src': ["'self'", "https://cdnjs.cloudflare.com/" ]  
+        }
+    }
+}))
 
 // Limit requests from same API
 const limiter = rateLimit({
@@ -68,13 +76,14 @@ app.use(hpp({
 }))
 
 // Body-parser -> reading data from body into req.body
-app.use(express.json({limit: '10kb'})); // limit the body to 10kilobytes
+app.use(express.json({limit: '10kb'})); // limit the body to 10kilobytes, parses the data from body
+app.use(cookieParser());  // parses the data from cookie
 
 
 // Test middleware
 app.use((req, res, next) => {
     req.requestTime = new Date().toISOString();
-    console.log(req.requestTime)
+    console.log(req.cookies)
     next();
 })
 
