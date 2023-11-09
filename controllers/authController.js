@@ -83,7 +83,10 @@ exports.protect = catchAsync(async(req, res, next) =>{
     }
     
     // Verification token
-    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET)
+    const decoded = await promisify(jwt.verify)(
+        token, 
+        process.env.JWT_SECRET
+    )
     console.log(decoded)
 
     // Check if user still exists
@@ -101,6 +104,38 @@ exports.protect = catchAsync(async(req, res, next) =>{
     req.user = currentUser
     next()
 })
+
+
+// Only for rendered pages, no errors!
+exports.isLoggedIn = catchAsync(async(req, res, next) =>{
+    if(req.cookies.jwt){
+        token = req.cookies.jwt
+        
+        // Verify the token
+        const decoded = await promisify(jwt.verify)(
+            req.cookies.jwt, 
+            process.env.JWT_SECRET
+        )
+        console.log(decoded)
+
+        // Check if user still exists
+        const currentUser = await User.findById(decoded.id)
+        if(!currentUser){
+            return next()
+        }
+
+        // Check if user changed password after the token was issued
+        if(!currentUser.changedPasswordAfter(decoded.iat)){
+            return next()
+        }
+
+        // THERE IS A LOGGED IN USER
+        res.locals.user = currentUser
+        return next()
+    }
+    next()
+})
+
 
 
 // USER ROLES AND PERMISSIONS
