@@ -17,7 +17,7 @@ export const showAlert = (type, msg) =>{
 //*********************************************************************************/
 
 
-// ************************************LOGIN*************************************
+// ************************************LOGIN***************************************/
 export const login = async(email,password) =>{
     try {
         const result = await axios({
@@ -52,6 +52,28 @@ if(loginForm){
         login(email,password)
     })
 }
+//*********************************************************************************/
+
+
+// ************************************LOGOUT***************************************/
+
+export const logout = async() =>{
+    try{
+        const result = await axios({
+            method: 'GET', // we don't post any info, but we GET a cookie by
+            url: 'http://127.0.0.1:3000/api/v1/users/logout'
+        })
+
+        if(result.data.status = 'success') location.reload(true) // reload the page automatically after logging out
+    }
+    catch(error) {
+        showAlert('error', 'Error Logging out! Try again!')
+    }
+}
+
+const logoutBtn = document.querySelector('.nav__el--logout')
+if(logoutBtn) logoutBtn.addEventListener('click', logout)
+
 //*********************************************************************************/
 
 

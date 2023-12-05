@@ -68,6 +68,19 @@ exports.login = catchAsync(async (req, res, next) => {
     createAndSendToken(user, 200, res)
 })
 
+
+// LOGOUT 
+exports.logout = (req, res) =>{
+    res.cookie('jwt', 'logged out',{
+        expires: new Date(Date.now() + 10 * 1000),
+        httpOnly: true
+    })
+    res.status(200).json({
+        status: 'success'
+    })
+}
+
+
 // PROTECTED TOUR ROUTE FUNCTION
 exports.protect = catchAsync(async(req, res, next) =>{
     // Get the token and check if it exists
@@ -107,7 +120,8 @@ exports.protect = catchAsync(async(req, res, next) =>{
 
 
 // Only for rendered pages, no errors!
-exports.isLoggedIn = catchAsync(async(req, res, next) =>{
+exports.isLoggedIn = async(req, res, next) =>{
+    try{
     if(req.cookies.jwt){
         token = req.cookies.jwt
         
@@ -133,8 +147,12 @@ exports.isLoggedIn = catchAsync(async(req, res, next) =>{
         res.locals.user = currentUser
         return next()
     }
+
+    }catch(error){
+        return next()
+    }
     next()
-})
+}
 
 
 
