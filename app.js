@@ -78,6 +78,7 @@ app.use(hpp({
 // Body-parser -> reading data from body into req.body
 app.use(express.json({limit: '10kb'})); // limit the body to 10kilobytes, parses the data from body
 app.use(cookieParser());  // parses the data from cookie
+app.use(express.urlencoded({extended: true, limit: '10kb'})); // urlencoded - to parse the data coming from an url encoded form
 
 
 // Test middleware
