@@ -27,7 +27,7 @@ router.patch('/updatePassword', authController.updatePassword)
 router.get('/me', userController.getMe, userController.getUser)
 
 // Update user
-router.patch('/updateMe', userController.updateMe)
+router.patch('/updateMe', userController.uploadUserPhoto, userController.resizeUserPhoto,userController.updateMe) // single - because we want to update one single photo
 
 // Delete user (make him inactive from DB)
 router.delete('/deleteMe', userController.deleteMe)

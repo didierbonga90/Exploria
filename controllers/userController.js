@@ -2,6 +2,52 @@ const User = require('../models/userModel')
 const catchAsync = require('../utils/catchAsync')  
 const AppError = require('../utils/appError')
 const factory = require('./handlerFactory')
+const multer = require('multer');
+const sharp = require('sharp')
+
+
+// Store our file
+// const multerStorage = multer.diskStorage({
+//     destination: (req, file, cb) =>{ // cb -> callback
+//         cb(null, 'public/img/users')// null -> no error
+//     },
+//     filename: (req, file, cb) =>{
+//         // user-341535345343-3232323.jpeg (user-id-currentTimeStamp.file_extension)
+//         const ext = file.mimetype.split('/')[1]
+//         cb(null, `user-${req.user.id}-${Date.now()}.${ext}`)
+//     }
+// })
+const multerStorage = multer.memoryStorage()
+
+const multerFilter = (req, file, cb) =>{
+    if(file.mimetype.startsWith('image')){
+        cb(null, true)
+    }else{
+        cb(new AppError('Not an image! please upload only images!', 400), false)
+    }
+}
+
+// Upload images in users folder from a form
+const upload = multer({
+    storage: multerStorage,
+    fileFilter: multerFilter
+})
+exports.uploadUserPhoto = upload.single('photo')
+
+// Resizing photo 
+exports.resizeUserPhoto = (req, res, next) =>{
+    if(!req.file) return next()
+
+    req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`
+    sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat('jpeg')
+    .jpeg({quality: 90})
+    .toFile(`public/img/users/${req.file.filename}`)
+    
+    next()
+}
+
 
 // filterObj -> to filter the whole body (req.body) and extract just the elements we need
 const filterObj = (obj, ...allowedFields) =>{
@@ -28,6 +74,7 @@ exports.updateMe = catchAsync(async(req, res, next) =>{
     
     // Filtered out unwanted fields names that are not allowed to be updated (so that we mention the only one we want)
     const filteredBody = filterObj(req.body, 'name', 'email') // filterObj -> here to extract just name and email
+    if(req.file) filteredBody.photo = req.file.filename
     
     // update user document
     const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, { 
