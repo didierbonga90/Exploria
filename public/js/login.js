@@ -1,3 +1,4 @@
+
 // ************************************ALERTS*************************************
 // hide alert
 export const hideAlert = () =>{
@@ -15,6 +16,39 @@ export const showAlert = (type, msg) =>{
 }
 //*********************************************************************************/
 
+
+// ************************************STRIPE*************************************
+
+const stripe = stripe('pk_test_51OMWf8AXgmQc5z4J0TrqsnD8umKy2T6RTeQnTa3prhqu9LT5lAGoDQpfhYv7AvIWG8e3jicqb3mQYOUL2RGrsaBQ00LxJeqnft')
+
+export const bookTour = async tourId =>{
+    try {
+        // get the session from API
+        const session = await axios(`http://127.0.0.1:3000/api/v1/bookings/checkout-session/${tourId}`) 
+        console.log(session)
+    
+        // create checkout form + charge credit card
+        await stripe.redirectToCheckout({
+            sessionId: session.data.session.id
+        })
+    } catch (error) {
+        conmsole.log(error)
+        showAlert('error'. err)
+    }
+    
+}
+
+const bookBtn = document.getElementById('book-tour')
+
+if(bookBtn){
+     bookBtn.addEventListener('click', e =>{
+        e.target.textContent = 'Processing...'
+        const {tourId} = e.target.dataset
+        bookTour(tourId)
+     })
+}
+
+//*********************************************************************************/
 
 
 

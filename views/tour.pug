@@ -2,6 +2,7 @@ extends base
 
 //- append or prepend
 block append head
+    script(src='https://js.stripe.com/v3')
     script(src='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js'  crossorigin='anonymous')
     link(href='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css' rel='stylesheet' crossorigin='anonymous')
 
@@ -81,9 +82,13 @@ block content
         .cta
             .cta__img.cta__img--logo
                 img(src='/img/logo-white.png', alt='Exploria logo')
-            img.cta__img.cta__img--1(src='/img/tours/tour-5-2.jpg', alt='')
-            img.cta__img.cta__img--2(src='/img/tours/tour-5-1.jpg', alt='')
+            img.cta__img.cta__img--1(src=`/img/tours/${tour.images[1]}`, alt='Tour pic')
+            img.cta__img.cta__img--2(src=`/img/tours/${tour.images[2]}`, alt='Tour pic')
             .cta__content
                 h2.heading-secondary What are you waiting for?
                 p.cta__text #{`${tour.duration} days. 1 adventure. Infinite memories. Make it yours today!`}
-                button.btn.btn--green.span-all-rows Book tour now!
+                
+                if user
+                    button.btn.btn--green.span-all-rows#book-tour(data-tour-id=`${tour.id}`) Book tour now!
+                else 
+                    a.btn.btn--green.span-all-rows(href='/login') Login into book tour!
