@@ -19,7 +19,7 @@ export const showAlert = (type, msg) =>{
 
 // ************************************STRIPE*************************************
 
-const stripe = stripe('pk_test_51OMWf8AXgmQc5z4J0TrqsnD8umKy2T6RTeQnTa3prhqu9LT5lAGoDQpfhYv7AvIWG8e3jicqb3mQYOUL2RGrsaBQ00LxJeqnft')
+// const stripe = Stripe('pk_test_51OMWf8AXgmQc5z4J0TrqsnD8umKy2T6RTeQnTa3prhqu9LT5lAGoDQpfhYv7AvIWG8e3jicqb3mQYOUL2RGrsaBQ00LxJeqnft')
 
 export const bookTour = async tourId =>{
     try {
@@ -32,7 +32,7 @@ export const bookTour = async tourId =>{
             sessionId: session.data.session.id
         })
     } catch (error) {
-        conmsole.log(error)
+        console.log(error)
         showAlert('error'. err)
     }
     
