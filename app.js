@@ -9,6 +9,7 @@ const mongoSanitize = require('express-mongo-sanitize')
 const xss = require('xss-clean')
 const hpp = require('hpp')
 const cookieParser = require('cookie-parser')
+const compression = require('compression')
 
 // DB Connectivity
 connectDB()
@@ -81,11 +82,13 @@ app.use(express.json({limit: '10kb'})); // limit the body to 10kilobytes, parses
 app.use(cookieParser());  // parses the data from cookie
 app.use(express.urlencoded({extended: true, limit: '10kb'})); // urlencoded - to parse the data coming from an url encoded form
 
+// Compression
+app.use(compression())
 
 // Test middleware
 app.use((req, res, next) => {
     req.requestTime = new Date().toISOString();
-    console.log(req.cookies)
+    // console.log(req.cookies)
     next();
 })
 

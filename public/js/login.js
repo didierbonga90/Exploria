@@ -24,8 +24,7 @@ export const showAlert = (type, msg) =>{
 export const bookTour = async tourId =>{
     try {
         // get the session from API
-        const session = await axios(`http://127.0.0.1:3000/api/v1/bookings/checkout-session/${tourId}`) 
-        console.log(session)
+        const session = await axios(`/api/v1/bookings/checkout-session/${tourId}`) 
     
         // create checkout form + charge credit card
         await stripe.redirectToCheckout({
@@ -58,7 +57,7 @@ export const login = async(email,password) =>{
     try {
         const result = await axios({
             method: 'POST',
-            url: 'http://127.0.0.1:3000/api/v1/users/login',
+            url: '/api/v1/users/login',
             data: {
                 email,
                 password
@@ -85,7 +84,6 @@ if(loginForm){
         e.preventDefault()
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
-        console.log(email, password)
         login(email,password)
     })
 }
@@ -101,7 +99,7 @@ export const logout = async() =>{
     try{
         const result = await axios({
             method: 'GET', // we don't post any info, but we GET a cookie by
-            url: 'http://127.0.0.1:3000/api/v1/users/logout'
+            url: '/api/v1/users/logout'
         })
 
         if(result.data.status = 'success') location.reload(true) // reload the page automatically after logging out
@@ -124,7 +122,7 @@ if(logoutBtn) logoutBtn.addEventListener('click', logout)
 
 export const updateSettings = async(data,type) => { // type is either password or data
     try {
-        const url = type === 'password' ? 'http://127.0.0.1:3000/api/v1/users/updatePassword' : 'http://127.0.0.1:3000/api/v1/users/updateMe'
+        const url = type === 'password' ? '/api/v1/users/updatePassword' : '/api/v1/users/updateMe'
         const res = await axios({
             method: 'PATCH',
             url,
@@ -146,8 +144,6 @@ if(userDataForm){
         form.append('name', document.getElementById('name').value)
         form.append('email', document.getElementById('email').value)
         form.append('photo', document.getElementById('photo').files[0])
-
-        console.log(form)
 
         updateSettings(form, 'data')
     })
